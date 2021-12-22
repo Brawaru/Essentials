@@ -1,6 +1,9 @@
 package net.essentialsx.discord.listeners;
 
 import com.earth2me.essentials.Console;
+import com.earth2me.essentials.IEssentials;
+import com.earth2me.essentials.User;
+import com.earth2me.essentials.perm.PermissionsHandler;
 import com.earth2me.essentials.utils.DateUtil;
 import com.earth2me.essentials.utils.FormatUtil;
 import com.earth2me.essentials.utils.VersionUtil;
@@ -49,30 +52,55 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMute(MuteStatusChangeEvent event) {
+        final User affectedUser = (User) event.getAffected();
+
+        final Player player = affectedUser.getBase();
+
+        final PermissionsHandler permissionsHandler = jda.getPlugin().getEss().getPermissionsHandler();
+
         if (!event.getValue()) {
             sendDiscordMessage(MessageType.DefaultTypes.MUTE,
                     MessageUtil.formatMessage(jda.getSettings().getUnmuteFormat(),
                             MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getName()),
+                            MessageUtil.sanitizeDiscordMarkdown(affectedUser.getNick(false, false)),
+                            MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(permissionsHandler.getPrefix(player))),
+                            MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(permissionsHandler.getSuffix(player))),
                             MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getDisplayName())));
         } else if (event.getTimestamp().isPresent()) {
             final boolean console = event.getController() == null;
+            final User controllerUser = (User) event.getController();
+            final Player controllerPlayer = controllerUser.getBase();
             final MessageFormat msg = event.getReason() == null ? jda.getSettings().getTempMuteFormat() : jda.getSettings().getTempMuteReasonFormat();
             sendDiscordMessage(MessageType.DefaultTypes.MUTE,
                     MessageUtil.formatMessage(msg,
                             MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getName()),
+                            MessageUtil.sanitizeDiscordMarkdown(affectedUser.getNick(false, false)),
+                            MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(permissionsHandler.getPrefix(player))),
+                            MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(permissionsHandler.getSuffix(player))),
                             MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getDisplayName()),
                             MessageUtil.sanitizeDiscordMarkdown(console ? Console.NAME : event.getController().getName()),
+                            MessageUtil.sanitizeDiscordMarkdown(console ? Console.DISPLAY_NAME : controllerUser.getNick(false, false)),
+                            MessageUtil.sanitizeDiscordMarkdown(console ? "" : FormatUtil.stripEssentialsFormat(permissionsHandler.getPrefix(controllerPlayer))),
+                            MessageUtil.sanitizeDiscordMarkdown(console ? "" : FormatUtil.stripEssentialsFormat(permissionsHandler.getSuffix(controllerPlayer))),
                             MessageUtil.sanitizeDiscordMarkdown(console ? Console.DISPLAY_NAME : event.getController().getDisplayName()),
                             DateUtil.formatDateDiff(event.getTimestamp().get()),
                             MessageUtil.sanitizeDiscordMarkdown(event.getReason())));
         } else {
             final boolean console = event.getController() == null;
+            final User controllerUser = (User) event.getController();
+            final Player controllerPlayer = controllerUser.getBase();
             final MessageFormat msg = event.getReason() == null ? jda.getSettings().getPermMuteFormat() : jda.getSettings().getPermMuteReasonFormat();
             sendDiscordMessage(MessageType.DefaultTypes.MUTE,
                     MessageUtil.formatMessage(msg,
                             MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getName()),
+                            MessageUtil.sanitizeDiscordMarkdown(affectedUser.getNick(false, false)),
+                            MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(permissionsHandler.getPrefix(player))),
+                            MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(permissionsHandler.getSuffix(player))),
                             MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getDisplayName()),
                             MessageUtil.sanitizeDiscordMarkdown(console ? Console.NAME : event.getController().getName()),
+                            MessageUtil.sanitizeDiscordMarkdown(console ? Console.DISPLAY_NAME : controllerUser.getNick(false, false)),
+                            MessageUtil.sanitizeDiscordMarkdown(console ? "" : FormatUtil.stripEssentialsFormat(permissionsHandler.getPrefix(controllerPlayer))),
+                            MessageUtil.sanitizeDiscordMarkdown(console ? "" : FormatUtil.stripEssentialsFormat(permissionsHandler.getSuffix(controllerPlayer))),
                             MessageUtil.sanitizeDiscordMarkdown(console ? Console.DISPLAY_NAME : event.getController().getDisplayName()),
                             MessageUtil.sanitizeDiscordMarkdown(event.getReason())));
         }
@@ -119,6 +147,9 @@ public class BukkitListener implements Listener {
     }
 
     public void sendJoinQuitMessage(final Player player, final String message, MessageType type) {
+        final IEssentials ess = jda.getPlugin().getEss();
+        final User user = ess.getUser(player);
+
         int onlineCount = jda.getPlugin().getEss().getOnlinePlayers().size();
         final MessageFormat format;
         switch (type.getKey()) {
@@ -137,6 +168,9 @@ public class BukkitListener implements Listener {
         sendDiscordMessage(type,
                 MessageUtil.formatMessage(format,
                         MessageUtil.sanitizeDiscordMarkdown(player.getName()),
+                        MessageUtil.sanitizeDiscordMarkdown(user.getNick(false, false)),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(ess.getPermissionsHandler().getPrefix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(ess.getPermissionsHandler().getSuffix(player))),
                         MessageUtil.sanitizeDiscordMarkdown(player.getDisplayName()),
                         MessageUtil.sanitizeDiscordMarkdown(message),
                         onlineCount,
@@ -146,65 +180,87 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent event) {
-        if (isVanishHide(event.getEntity())) {
+        final Player player = event.getEntity();
+
+        if (isVanishHide(player)) {
             return;
         }
 
         final Boolean showDeathMessages;
         if (VersionUtil.getServerBukkitVersion().isHigherThan(VersionUtil.v1_12_2_R01)) {
-            showDeathMessages = event.getEntity().getWorld().getGameRuleValue(GameRule.SHOW_DEATH_MESSAGES);
+            showDeathMessages = player.getWorld().getGameRuleValue(GameRule.SHOW_DEATH_MESSAGES);
         } else {
-            if (!event.getEntity().getWorld().isGameRule("showDeathMessages")) {
+            if (!player.getWorld().isGameRule("showDeathMessages")) {
                 showDeathMessages = null;
             } else {
                 //noinspection deprecation
-                showDeathMessages = event.getEntity().getWorld().getGameRuleValue("showDeathMessages").equals("true");
+                showDeathMessages = player.getWorld().getGameRuleValue("showDeathMessages").equals("true");
             }
         }
         if ((showDeathMessages != null && !showDeathMessages) || event.getDeathMessage() == null || event.getDeathMessage().trim().isEmpty()) {
             return;
         }
 
+        final User user = jda.getPlugin().getEss().getUser(player);
+
         sendDiscordMessage(MessageType.DefaultTypes.DEATH,
-                MessageUtil.formatMessage(jda.getSettings().getDeathFormat(event.getEntity()),
-                        MessageUtil.sanitizeDiscordMarkdown(event.getEntity().getName()),
-                        MessageUtil.sanitizeDiscordMarkdown(event.getEntity().getDisplayName()),
+                MessageUtil.formatMessage(jda.getSettings().getDeathFormat(player),
+                        MessageUtil.sanitizeDiscordMarkdown(player.getName()),
+                        MessageUtil.sanitizeDiscordMarkdown(user.getNick(false, false)),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(jda.getPlugin().getEss().getPermissionsHandler().getPrefix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(jda.getPlugin().getEss().getPermissionsHandler().getSuffix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(player.getDisplayName()),
                         MessageUtil.sanitizeDiscordMarkdown(event.getDeathMessage())),
-                event.getEntity());
+                player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAfk(AfkStatusChangeEvent event) {
-        if (isVanishHide(event.getAffected())) {
+        final IUser affectedUser = event.getAffected();
+        final Player player = affectedUser.getBase();
+
+        if (isVanishHide(affectedUser)) {
             return;
         }
 
         final MessageFormat format;
         if (event.getValue()) {
-            format = jda.getSettings().getAfkFormat(event.getAffected().getBase());
+            format = jda.getSettings().getAfkFormat(player);
         } else {
-            format = jda.getSettings().getUnAfkFormat(event.getAffected().getBase());
+            format = jda.getSettings().getUnAfkFormat(player);
         }
 
         sendDiscordMessage(MessageType.DefaultTypes.AFK,
                 MessageUtil.formatMessage(format,
-                        MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getName()),
-                        MessageUtil.sanitizeDiscordMarkdown(event.getAffected().getDisplayName())),
-                event.getAffected().getBase());
+                        MessageUtil.sanitizeDiscordMarkdown(affectedUser.getName()),
+                        MessageUtil.sanitizeDiscordMarkdown(((User) affectedUser).getNick(false, false)),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(jda.getPlugin().getEss().getPermissionsHandler().getPrefix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(jda.getPlugin().getEss().getPermissionsHandler().getSuffix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(affectedUser.getDisplayName())),
+                player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onAdvancement(AbstractAchievementEvent event) {
-        if (isVanishHide(event.getPlayer())) {
+        final Player player = event.getPlayer();
+
+        if (isVanishHide(player)) {
             return;
         }
 
+        final IEssentials ess = jda.getPlugin().getEss();
+
+        final User user = ess.getUser(player);
+
         sendDiscordMessage(MessageType.DefaultTypes.ADVANCEMENT,
-                MessageUtil.formatMessage(jda.getSettings().getAdvancementFormat(event.getPlayer()),
-                        MessageUtil.sanitizeDiscordMarkdown(event.getPlayer().getName()),
-                        MessageUtil.sanitizeDiscordMarkdown(event.getPlayer().getDisplayName()),
+                MessageUtil.formatMessage(jda.getSettings().getAdvancementFormat(player),
+                        MessageUtil.sanitizeDiscordMarkdown(player.getName()),
+                        MessageUtil.sanitizeDiscordMarkdown(user.getNick(false, false)),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(ess.getPermissionsHandler().getPrefix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(ess.getPermissionsHandler().getSuffix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(player.getDisplayName()),
                         event.getName()),
-                event.getPlayer());
+                player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -213,9 +269,15 @@ public class BukkitListener implements Listener {
             return;
         }
 
+        final User user = (User) event.getUser();
+        final Player player = user.getBase();
+
         sendDiscordMessage(MessageType.DefaultTypes.ACTION,
                 MessageUtil.formatMessage(jda.getSettings().getActionFormat(event.getUser().getBase()),
                         MessageUtil.sanitizeDiscordMarkdown(event.getUser().getName()),
+                        MessageUtil.sanitizeDiscordMarkdown(user.getNick(false, false)),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(jda.getPlugin().getEss().getPermissionsHandler().getPrefix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(jda.getPlugin().getEss().getPermissionsHandler().getSuffix(player))),
                         MessageUtil.sanitizeDiscordMarkdown(event.getUser().getDisplayName()),
                         event.getMessage()),
                 event.getUser().getBase());
@@ -223,13 +285,22 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onKick(PlayerKickEvent event) {
-        if (isVanishHide(event.getPlayer())) {
+        final Player player = event.getPlayer();
+
+        if (isVanishHide(player)) {
             return;
         }
+
+        final IEssentials ess = jda.getPlugin().getEss();
+        final User user = ess.getUser(player);
+
         sendDiscordMessage(MessageType.DefaultTypes.KICK,
                 MessageUtil.formatMessage(jda.getSettings().getKickFormat(),
-                        MessageUtil.sanitizeDiscordMarkdown(event.getPlayer().getName()),
-                        MessageUtil.sanitizeDiscordMarkdown(event.getPlayer().getDisplayName()),
+                        MessageUtil.sanitizeDiscordMarkdown(player.getName()),
+                        MessageUtil.sanitizeDiscordMarkdown(user.getNick(false, false)),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(ess.getPermissionsHandler().getPrefix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(FormatUtil.stripEssentialsFormat(ess.getPermissionsHandler().getSuffix(player))),
+                        MessageUtil.sanitizeDiscordMarkdown(player.getDisplayName()),
                         MessageUtil.sanitizeDiscordMarkdown(event.getReason())));
     }
 

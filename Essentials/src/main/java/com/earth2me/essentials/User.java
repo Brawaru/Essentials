@@ -503,12 +503,12 @@ public class User extends UserData implements Comparable<User>, IMessageRecipien
 
         if (ess.getSettings().addPrefixSuffix()) {
             //These two extra toggles are not documented, because they are mostly redundant #EasterEgg
-            if (withPrefix || !ess.getSettings().disablePrefix()) {
+            if (withPrefix && !ess.getSettings().disablePrefix()) {
                 final String ptext = FormatUtil.replaceFormat(ess.getPermissionsHandler().getPrefix(base));
                 prefix.insert(0, ptext);
                 suffix = "§r";
             }
-            if (withSuffix || !ess.getSettings().disableSuffix()) {
+            if (withSuffix && !ess.getSettings().disableSuffix()) {
                 final String stext = FormatUtil.replaceFormat(ess.getPermissionsHandler().getSuffix(base));
                 suffix = stext + "§r";
                 // :YEP: WHAT ARE THEY DOING?

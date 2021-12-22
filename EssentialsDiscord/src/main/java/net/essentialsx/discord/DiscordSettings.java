@@ -251,7 +251,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, getMcToDiscordDefaultFormat(chatType), false,
-                "username", "displayname", "message", "world", "prefix", "suffix");
+                "username", "nickname", "displayname", "message", "world", "prefix", "suffix");
     }
 
     private String getMcToDiscordFormatKey(ChatType chatType) {
@@ -339,7 +339,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":arrow_right: {displayname} has joined!", false,
-                "username", "displayname", "joinmessage", "online", "unique");
+                "username", "nickname", "prefix", "suffix", "displayname", "joinmessage", "online", "unique");
     }
 
     public MessageFormat getFirstJoinFormat(Player player) {
@@ -351,7 +351,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":arrow_right: :first_place: {displayname} has joined the server for the first time!", false,
-                "username", "displayname", "joinmessage", "online", "unique");
+                "username", "nickname", "prefix", "suffix", "displayname", "joinmessage", "online", "unique");
     }
 
     public MessageFormat getQuitFormat(Player player) {
@@ -363,7 +363,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":arrow_left: {displayname} has left!", false,
-                "username", "displayname", "quitmessage", "online", "unique");
+                "username", "nickname", "prefix", "suffix", "displayname", "quitmessage", "online", "unique");
     }
 
     public MessageFormat getDeathFormat(Player player) {
@@ -375,7 +375,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":skull: {deathmessage}", false,
-                "username", "displayname", "deathmessage");
+                "username", "nickname", "prefix", "suffix", "displayname", "deathmessage");
     }
 
     public MessageFormat getAfkFormat(Player player) {
@@ -387,7 +387,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":person_walking: {displayname} is now AFK!", false,
-                "username", "displayname");
+                "username", "nickname", "prefix", "suffix", "displayname");
     }
 
     public MessageFormat getUnAfkFormat(Player player) {
@@ -399,7 +399,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":keyboard: {displayname} is no longer AFK!", false,
-                "username", "displayname");
+                "username", "nickname", "prefix", "suffix", "displayname");
     }
 
     public MessageFormat getAdvancementFormat(Player player) {
@@ -411,7 +411,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":medal: {displayname} has completed the advancement **{advancement}**!", false,
-                "username", "displayname", "advancement");
+                "username", "nickname", "prefix", "suffix", "displayname", "advancement");
     }
 
     public MessageFormat getActionFormat(Player player) {
@@ -423,7 +423,7 @@ public class DiscordSettings implements IConf {
             filled = format;
         }
         return generateMessageFormat(filled, ":person_biking: {displayname} *{action}*", false,
-                "username", "displayname", "action");
+                "username", "nickname", "prefix", "suffix", "displayname", "action");
     }
 
     public String getStartMessage() {
@@ -565,15 +565,15 @@ public class DiscordSettings implements IConf {
                 "channel", "username", "discriminator", "fullname", "nickname", "color", "message", "role");
         unmuteFormat = generateMessageFormat(getFormatString("unmute"), "{displayname} unmuted.", false, "username", "displayname");
         tempMuteFormat = generateMessageFormat(getFormatString("temporary-mute"), "{controllerdisplayname} has muted player {displayname} for {time}.", false,
-                "username", "displayname", "controllername", "controllerdisplayname", "time");
+                "username", "nickname", "prefix", "suffix", "displayname", "controllername", "controllernickname", "controllerprefix", "controllersuffix", "controllerdisplayname", "time");
         permMuteFormat = generateMessageFormat(getFormatString("permanent-mute"), "{controllerdisplayname} permanently muted {displayname}.", false,
-                "username", "displayname", "controllername", "controllerdisplayname");
+                "username", "nickname", "prefix", "suffix", "displayname", "controllername", "controllernickname", "controllerprefix", "controllersuffix", "controllerdisplayname");
         tempMuteReasonFormat = generateMessageFormat(getFormatString("temporary-mute-reason"), "{controllerdisplayname} has muted player {displayname} for {time}. Reason: {reason}.", false,
-                "username", "displayname", "controllername", "controllerdisplayname", "time", "reason");
+                "username", "nickname", "prefix", "suffix", "displayname", "controllername", "controllernickname", "controllerprefix", "controllersuffix", "controllerdisplayname", "time", "reason");
         permMuteReasonFormat = generateMessageFormat(getFormatString("permanent-mute-reason"), "{controllerdisplayname} has muted player {displayname}. Reason: {reason}.", false,
-                "username", "displayname", "controllername", "controllerdisplayname", "reason");
+                "username", "nickname", "prefix", "suffix", "displayname", "controllername", "controllernickname", "controllerprefix", "controllersuffix", "controllerdisplayname", "reason");
         kickFormat = generateMessageFormat(getFormatString("kick"), "{displayname} was kicked with reason: {reason}", false,
-                "username", "displayname", "reason");
+                "username", "nickname", "prefix", "suffix", "displayname", "reason");
 
         plugin.onReload();
     }

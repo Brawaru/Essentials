@@ -284,6 +284,7 @@ public class JDADiscordService implements DiscordService, IEssentialsModule {
 
         final String formattedMessage = MessageUtil.formatMessage(getSettings().getMcToDiscordFormat(player, chatType),
                 MessageUtil.sanitizeDiscordMarkdown(player.getName()),
+                MessageUtil.sanitizeDiscordMarkdown(user.getNick(false, false)),
                 MessageUtil.sanitizeDiscordMarkdown(player.getDisplayName()),
                 user.isAuthorized("essentials.discord.markdown") ? chatMessage : MessageUtil.sanitizeDiscordMarkdown(chatMessage),
                 MessageUtil.sanitizeDiscordMarkdown(getPlugin().getEss().getSettings().getWorldAlias(player.getWorld().getName())),
